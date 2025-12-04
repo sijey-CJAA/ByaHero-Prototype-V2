@@ -88,6 +88,11 @@ function getBuses() {
 function registerBus() {
     $data = json_decode(file_get_contents('php://input'), true);
     
+    if ($data === null) {
+        http_response_code(400);
+        return ['success' => false, 'error' => 'Invalid JSON'];
+    }
+    
     if (!isset($data['bus_id']) || !isset($data['route'])) {
         http_response_code(400);
         return ['success' => false, 'error' => 'Missing bus_id or route'];
@@ -111,16 +116,30 @@ function registerBus() {
 function updateLocation() {
     $data = json_decode(file_get_contents('php://input'), true);
     
+    if ($data === null) {
+        http_response_code(400);
+        return ['success' => false, 'error' => 'Invalid JSON'];
+    }
+    
     if (!isset($data['bus_id']) || !isset($data['lat']) || !isset($data['lng'])) {
         http_response_code(400);
         return ['success' => false, 'error' => 'Missing required fields: bus_id, lat, lng'];
+    }
+    
+    // Validate latitude and longitude
+    $lat = filter_var($data['lat'], FILTER_VALIDATE_FLOAT);
+    $lng = filter_var($data['lng'], FILTER_VALIDATE_FLOAT);
+    
+    if ($lat === false || $lng === false || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+        http_response_code(400);
+        return ['success' => false, 'error' => 'Invalid latitude or longitude values'];
     }
     
     $db = getDB();
     
     // Build dynamic query based on provided fields
     $fields = ['lat = ?', 'lng = ?', 'updated_at = CURRENT_TIMESTAMP'];
-    $params = [$data['lat'], $data['lng']];
+    $params = [$lat, $lng];
     
     if (isset($data['route'])) {
         $fields[] = 'route = ?';
@@ -128,11 +147,21 @@ function updateLocation() {
     }
     
     if (isset($data['seats_available'])) {
+        $seatsAvailable = filter_var($data['seats_available'], FILTER_VALIDATE_INT);
+        if ($seatsAvailable === false || $seatsAvailable < 0) {
+            http_response_code(400);
+            return ['success' => false, 'error' => 'Invalid seats_available value'];
+        }
         $fields[] = 'seats_available = ?';
-        $params[] = $data['seats_available'];
+        $params[] = $seatsAvailable;
     }
     
     if (isset($data['status'])) {
+        $allowedStatuses = ['available', 'on_stop', 'full', 'unavailable'];
+        if (!in_array($data['status'], $allowedStatuses)) {
+            http_response_code(400);
+            return ['success' => false, 'error' => 'Invalid status value'];
+        }
         $fields[] = 'status = ?';
         $params[] = $data['status'];
     }

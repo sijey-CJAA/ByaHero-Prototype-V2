@@ -15,7 +15,7 @@ echo "================================\n\n";
 // Check if data directory exists
 if (!is_dir(__DIR__ . '/data')) {
     echo "Creating data directory...\n";
-    mkdir(__DIR__ . '/data', 0755, true);
+    mkdir(__DIR__ . '/data', 0750, true);
 }
 
 // Check if database already exists

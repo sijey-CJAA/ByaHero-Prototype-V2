@@ -462,13 +462,22 @@
         }
         
         /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        /**
          * Show alert message
          */
         function showAlert(message, type) {
             const alertBox = document.getElementById('alertBox');
             const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
             
-            alertBox.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            alertBox.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
             
             setTimeout(() => {
                 alertBox.innerHTML = '';

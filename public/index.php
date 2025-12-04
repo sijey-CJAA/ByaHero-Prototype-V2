@@ -242,6 +242,15 @@
         };
         
         /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        /**
          * Create custom bus icon
          */
         function createBusIcon(status) {
@@ -327,9 +336,9 @@
         function createPopupContent(bus) {
             return `
                 <div style="min-width: 150px;">
-                    <strong style="font-size: 1.1em;">${bus.code}</strong><br>
-                    <strong>Route:</strong> ${bus.route || 'Not set'}<br>
-                    <strong>Status:</strong> ${bus.status}<br>
+                    <strong style="font-size: 1.1em;">${escapeHtml(bus.code)}</strong><br>
+                    <strong>Route:</strong> ${escapeHtml(bus.route || 'Not set')}<br>
+                    <strong>Status:</strong> ${escapeHtml(bus.status)}<br>
                     <strong>Seats:</strong> ${bus.seats_available}/${bus.seats_total} available<br>
                     <small style="color: #666;">Updated: ${new Date(bus.updated_at).toLocaleTimeString()}</small>
                 </div>
@@ -360,9 +369,9 @@
                 .filter(bus => bus.lat && bus.lng)
                 .map(bus => `
                     <div class="bus-item">
-                        <strong>${bus.code}</strong>
-                        <small>Route: ${bus.route || 'Not set'}</small><br>
-                        <small>Seats: ${bus.seats_available}/${bus.seats_total} | ${bus.status}</small>
+                        <strong>${escapeHtml(bus.code)}</strong>
+                        <small>Route: ${escapeHtml(bus.route || 'Not set')}</small><br>
+                        <small>Seats: ${bus.seats_available}/${bus.seats_total} | ${escapeHtml(bus.status)}</small>
                     </div>
                 `).join('');
         }
