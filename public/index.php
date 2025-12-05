@@ -129,6 +129,16 @@
             margin-bottom: 0.5rem;
             border-radius: 4px;
             border-left: 4px solid #667eea;
+            cursor: default;
+        }
+        
+        .bus-item.clickable {
+            cursor: pointer;
+        }
+
+        .bus-item.clickable:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
         }
         
         .bus-item strong {
@@ -345,6 +355,23 @@
         }
         
         /**
+         * Center map on a bus and open its popup
+         */
+        function focusBus(busId) {
+            const marker = busMarkers[busId];
+            if (marker) {
+                const latlng = marker.getLatLng();
+                // Smoothly fly to the bus and open popup
+                map.flyTo(latlng, 16, { duration: 0.8 });
+                // openPopup after the move starts (small timeout ensures popup shows after view anim)
+                setTimeout(() => marker.openPopup(), 900);
+            } else {
+                // If marker not available (no lat/lng) show a small notice
+                alert('Location for this bus is not available.');
+            }
+        }
+        
+        /**
          * Update bus list in sidebar
          */
         function updateBusList(buses) {
@@ -364,15 +391,28 @@
                 return;
             }
             
+            // Build HTML for each bus item and mark items with data-bus-id
             busList.innerHTML = filteredBuses
                 .filter(bus => bus.lat && bus.lng)
                 .map(bus => `
-                    <div class="bus-item">
+                    <div class="bus-item clickable" data-bus-id="${bus.id}">
                         <strong>${escapeHtml(bus.code)}</strong>
                         <small>Route: ${escapeHtml(bus.route || 'Not set')}</small><br>
                         <small>Seats: ${bus.seats_available}/${bus.seats_total} | ${escapeHtml(bus.status)}</small>
                     </div>
                 `).join('');
+            
+            // Attach click handlers to newly created items (safe: uses dataset and numeric id)
+            const items = busList.querySelectorAll('.bus-item.clickable');
+            items.forEach(item => {
+                // remove existing handler if any by replacing node (prevents duplicate listeners on repeated updates)
+                const newItem = item.cloneNode(true);
+                item.parentNode.replaceChild(newItem, item);
+                newItem.addEventListener('click', (e) => {
+                    const id = newItem.dataset.busId;
+                    if (id) focusBus(id);
+                });
+            });
         }
         
         /**
