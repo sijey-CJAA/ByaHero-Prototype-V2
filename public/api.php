@@ -175,6 +175,33 @@ function updateLocation() {
     return ['success' => true, 'message' => 'Location updated successfully'];
 }
 
+/**
+ * Stop tracking (clear location and mark as unavailable)
+ */
+function stopTracking() {
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if ($data === null) {
+        http_response_code(400);
+        return ['success' => false, 'error' => 'Invalid JSON'];
+    }
+    
+    if (!isset($data['bus_id'])) {
+        http_response_code(400);
+        return ['success' => false, 'error' => 'Missing bus_id'];
+    }
+    
+    $db = getDB();
+    $stmt = $db->prepare("
+        UPDATE buses 
+        SET lat = NULL, lng = NULL, status = 'unavailable', updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    ");
+    $stmt->execute([$data['bus_id']]);
+    
+    return ['success' => true, 'message' => 'Stopped tracking for bus'];
+}
+
 // Handle the request
 $action = $_GET['action'] ?? $_POST['action'] ?? 'get_buses';
 
@@ -194,6 +221,10 @@ try {
             
         case 'update_location':
             $response = updateLocation();
+            break;
+
+        case 'stop_tracking':
+            $response = stopTracking();
             break;
             
         default:

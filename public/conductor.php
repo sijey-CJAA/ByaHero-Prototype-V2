@@ -370,11 +370,39 @@
         
         /**
          * Stop location tracking
+         * Notify server so passenger view won't continue to show this bus
          */
         function stopTracking() {
             if (trackingInterval) {
                 clearInterval(trackingInterval);
                 trackingInterval = null;
+            }
+            
+            // If we have a current bus, inform server to stop tracking (clear location + set unavailable)
+            if (currentBus && currentBus.id) {
+                fetch('/api.php?action=stop_tracking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ bus_id: currentBus.id })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success) {
+                        console.error('Failed to stop tracking:', result.error);
+                        showAlert('Failed to notify server when stopping tracking', 'error');
+                    } else {
+                        showAlert('Stopped tracking and notified server.', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error stopping tracking:', error);
+                    showAlert('Error notifying server when stopping tracking', 'error');
+                });
+            } else {
+                // No active bus, just show confirmation
+                showAlert('Tracking stopped', 'success');
             }
             
             currentBus = null;
@@ -384,8 +412,6 @@
             document.getElementById('setupSection').style.display = 'block';
             document.getElementById('trackingSection').style.display = 'none';
             document.getElementById('routeInput').value = '';
-            
-            showAlert('Tracking stopped', 'success');
         }
         
         /**
