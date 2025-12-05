@@ -170,8 +170,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>🚌 ByaHero Bus Tracker</h1>
-        <p>Real-time bus locations and availability</p>
+        <h1>ByaHero: Prototype V4</h1>
     </div>
     
     <div class="container">
