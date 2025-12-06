@@ -402,10 +402,8 @@
                     </div>
                 `).join('');
             
-            // Attach click handlers to newly created items (safe: uses dataset and numeric id)
             const items = busList.querySelectorAll('.bus-item.clickable');
             items.forEach(item => {
-                // remove existing handler if any by replacing node (prevents duplicate listeners on repeated updates)
                 const newItem = item.cloneNode(true);
                 item.parentNode.replaceChild(newItem, item);
                 newItem.addEventListener('click', (e) => {
@@ -415,9 +413,6 @@
             });
         }
         
-        /**
-         * Update route filter dropdown
-         */
         function updateRouteFilter(buses) {
             const routeFilter = document.getElementById('routeFilter');
             const currentRoutes = [...new Set(buses.map(b => b.route).filter(r => r))];
